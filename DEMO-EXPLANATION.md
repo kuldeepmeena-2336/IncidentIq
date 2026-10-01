@@ -581,3 +581,399 @@ The next evolution would be:
 - connect live alerting and monitoring tools to incident intelligence
 
 This gives the project a scalable path from proof-of-concept to production platform.
+
+## Ingestion flow: how the system processes a new incident
+
+The ingestion flow is the system's ability to take a raw production issue and convert it into structured operational knowledge.
+
+In a real-world setup, a new incident may arrive from Jira, a support tool, a service event payload, email, chat logs, or unstructured operational notes. The system does not simply store the raw record as plain text. Instead, it uses an AI-powered ingestion agent to interpret the payload, understand the context, normalize the data, and convert it into a reusable asset for future reasoning and retrieval.
+
+Professional explanation:
+
+- A new issue enters the system through the API endpoint `/ingest`.
+- The payload is validated using a request model so the data is in a consistent format.
+- The ingestion agent analyzes the incoming data and handles multiple varieties of raw inputs, including different field names, inconsistent formats, partial issue details, and free-text descriptions.
+- Using an LLM model such as OpenAI or an OpenAI-compatible provider, the system extracts structured facts such as summary, service name, severity, affected dependency, root-cause clues, assignee, tags, and resolution notes.
+- The AI agent helps standardize diverse inputs into a common schema so they can be stored and searched consistently across historical incidents.
+- The system stores the normalized record in the database for traceability, operational history, and future retrieval.
+- It may also create or update searchable metadata, embeddings, and indexing fields so the issue can later be retrieved by similarity, keywords, and historical patterns.
+- The final result is a structured incident record that can be reused for future queries, analytics, dashboards, and decision-making.
+
+Why this matters:
+
+- Real incident data is noisy, inconsistent, and often arrives in multiple formats.
+- AI-based normalization reduces manual effort and prevents valuable operational knowledge from being lost in unstructured text.
+- Structured ingestion turns fragmented incident information into operational intelligence.
+- Without this step, the system would only have scattered ticket text rather than a reusable knowledge base.
+
+This is important because the value of an incident management system is not just storing tickets. It is creating a reliable knowledge base from past issues that can be understood, searched, and reused by AI agents later.
+
+### Which model helps us achieve this?
+
+The ingestion workflow is powered by the configured LLM provider in the platform, such as OpenAI, Azure OpenAI, or an OpenAI-compatible model endpoint. These models help us:
+
+- parse varied unstructured inputs
+- identify incident intent and key fields
+- extract operational details from descriptions and logs
+- normalize data into a common schema
+- create consistent metadata for downstream retrieval and search
+
+This is where AI adds value: it helps the system handle multiple data shapes, formats, and writing styles without requiring hardcoded rules for every possible payload variation.
+
+In other words, the model acts as the reasoning layer that turns messy incident data into clean, structured operational knowledge.
+
+---
+
+## Retrieval flow: how the system answers a user query
+
+The retrieval flow is the system's ability to search the stored incident history and return the most relevant evidence-based results for a user need.
+
+When someone asks a query such as "show me incidents related to database failures in payments" or "find similar RCA for vendor API outage," the system does not guess. It follows a structured retrieval workflow.
+
+Professional explanation:
+
+- The user sends a request to `/retrieve` with a natural language query.
+- The intent router interprets the query and decides whether it is a search, root-cause lookup, trend question, or incident-based investigation.
+- The retrieval agent searches the database and/or vector store for similar incidents.
+- Matching incidents are scored using relevance, keywords, metadata, and semantic similarity.
+- The result validator checks whether the results are meaningful and grounded in actual incident data.
+- The response formatter produces a clean summary that is easy to understand for the user.
+
+This means the system is not just returning a generic AI answer. It is grounding the answer in real historical incident information stored by the platform.
+
+Why this matters:
+
+- Engineers need evidence, not guesses.
+- Support teams need relevant past incidents, not broad summaries.
+- Managers need accurate operational insight, not unverified AI-generated content.
+
+The retrieval layer turns the stored knowledge into practical action.
+
+---
+
+## Why ingestion and retrieval together make the system agentic
+
+The true value of the project is the combination of ingestion and retrieval working together as a closed intelligence loop.
+
+This is what makes it agentic:
+
+- Ingestion captures and normalizes new knowledge.
+- Retrieval uses that stored knowledge to answer future questions.
+- Routing and decision-making decide which agent or workflow should handle a request.
+- Validation ensures that outputs are trustworthy and useful.
+- The system adapts to different user needs and operational scenarios instead of doing a single fixed action.
+
+In simple terms:
+
+- ingestion builds the memory
+- retrieval accesses the memory
+- orchestration decides how to act
+- validation ensures reliability
+- the system behaves like an intelligent assistant, not a static application
+
+This is the core definition of an agentic system: it can take input, reason over context, select actions, access stored knowledge, and produce a meaningful outcome.
+
+---
+
+## Professional demo explanation for interviewers
+
+You can say this in a demo:
+
+"This project is designed as an incident intelligence platform. It continuously ingests production issues from ticketing and operational sources, structures the information into a searchable repository, and then retrieves relevant historical cases when a new problem emerges. The ingestion layer transforms raw incident data into reusable knowledge, while the retrieval layer allows engineers and operators to find similar historical incidents, root causes, and resolutions quickly. Together, these flows create an agentic workflow where the system not only stores information but also decides, routes, validates, and responds based on real context. That is what makes this more than a simple search tool; it behaves like an operational decision-support assistant."
+
+---
+
+## Simple storytelling version for a live demo
+
+"When a new issue enters the system, we ingest it and convert it into structured knowledge. Later, when someone asks a question, the system searches past incidents, finds the most relevant cases, and provides a grounded answer. That is the core intelligence loop of the product: capture, understand, retrieve, validate, and respond."
+
+---
+
+## Demo-friendly 2-person team explanation
+
+If asked about team responsibilities, you can explain it like this:
+
+- Person 1: AI workflow and reasoning
+  - designed the agentic orchestration
+  - built routing and decision logic
+  - connected providers and intelligence layers
+  - focused on how the system makes decisions and routes work
+
+- Person 2: data and API engineering
+  - built the ingestion endpoints and request models
+  - designed storage, persistence, and retrieval logic
+  - connected the backend with database services and APIs
+  - focused on making the system reliable and operational
+
+This split shows a realistic engineering model: one person can focus on agent behavior, while the other focuses on robust backend and data infrastructure.
+
+---
+
+## One-line takeaway
+
+The ingestion process creates a memory of past incidents, and the retrieval process uses that memory to make intelligent decisions and answer new operational questions. Together, they define an agentic system that learns from past issues and supports future action.
+
+---
+
+## Demo Script for POC Presentation
+
+---
+
+### 1. Opening: Application overview
+
+Presenter 1: "Good morning everyone. Today I’ll present IncidentIQ, an AI-powered incident intelligence platform built to solve a very common operational problem: production incidents are generated every day, but the knowledge from those incidents remains scattered across Jira, support logs, and operational records. Teams repeatedly solve the same issues, and the root cause information is often buried in unstructured data.
+
+Our solution is to build a system that ingests this incident data, normalizes it, stores it in a structured manner, and then helps engineers retrieve similar historical incidents and root causes when a new issue appears. In simple terms, we are turning historical production incidents into reusable operational knowledge.
+
+This is not just a search tool. It is an AI-driven workflow that can understand the intent of user queries, identify the relevant issue context, retrieve the right historical evidence, validate the output, and return a structured response. That is the core idea behind the agentic architecture of this project."
+
+Then explain the tech stack:
+
+- Python as the core language
+- FastAPI for API development
+- Pydantic for validation
+- SQLAlchemy for persistence
+- SQLite for local demo database
+- LangGraph for workflow orchestration and agentic decision flow
+- OpenAI / Azure OpenAI / OpenAI-compatible model providers for AI reasoning and enrichment
+- Vector / semantic search support for retrieval based on similarity and relevance
+
+Presenter 1 continues: "The key idea is simple: we are building an intelligence layer on top of production incident history so that teams can search, reason, and act faster."
+
+---
+
+### 2. Basic flow diagram
+
+Presenter 1 explains: "The system works in a loop. A new incident enters the system through an ingestion API, we normalize and store it, then when a user asks a question, the system interprets the query, searches the stored data, validates the result, and returns a response."
+
+```mermaid
+flowchart TD
+    A[New incident data] --> B[Ingestion API]
+    B --> C[AI normalization / extraction]
+    C --> D[Structured incident record]
+    D --> E[(Database)]
+
+    F[User question] --> G[Intent understanding]
+    G --> H[Search + retrieval]
+    E --> H
+    H --> I[Validation]
+    I --> J[Final response]
+```
+
+---
+
+### 3. Partner handover: Ingestion explanation
+
+Presenter 2: "I’ll now explain the ingestion part. This is where the system receives a raw incident and converts it into structured knowledge."
+
+Presenter 2 continues:
+
+- A raw issue may come from Jira, support tools, email, or an event payload.
+- The input is not always clean or standardized.
+- Fields may be missing, differently named, or written in free text.
+- The system uses an AI ingestion agent to understand these variations.
+- The model helps extract the key information such as title, service, severity, dependency, root cause, status, and resolution details.
+- After extraction, the data is normalized into a common schema and stored in the database.
+
+Presenter 2 explains the AI benefit: "This is important because actual production data is messy. We are not just dumping raw tickets into a table. We are using the AI model to convert various forms of incident data into a clean, reusable structure that can be searched later. That is a huge advantage because it reduces manual processing and improves consistency."
+
+Presenter 2 shows API call:
+
+- Endpoint: POST /ingest
+- Example payload with issue details or custom JSON payload
+
+Example payload:
+
+```json
+{
+  "payload": {
+    "issue_key": "INC-1048",
+    "summary": "Payment API timeout after deployment",
+    "severity": "SEV1",
+    "service": "payments",
+    "description": "After the recent deployment, payment gateway requests started timing out and users saw checkout failures.",
+    "root_cause": "database connection pool exhaustion after traffic spike",
+    "resolution": "rolled back the deployment and scaled DB connections"
+  }
+}
+```
+
+Then say: "This is the ingestion request. The API validates the payload and passes it to the ingestion agent. The agent interprets the incident, extracts the relevant structured fields, and stores it in the database."
+
+Presenter 2 then shows database check:
+
+- Query the incidents table / check stored record
+- Explain that the system stores normalized incident data instead of only raw text
+
+Presenter 2 concludes: "So the ingestion layer creates the memory of the system. Every future query depends on the quality of this stored structured history."
+
+---
+
+### 4. Presenter handover: Retrieval explanation
+
+Presenter 1: "Now I’ll explain the retrieval path, which is the real decision-making part of the system."
+
+Presenter 1 states the step-by-step logic:
+
+1. User sends a query to the /retrieve API.
+2. The system reads the natural language prompt.
+3. The intent understanding layer identifies what the user wants.
+4. The system extracts keywords, filters, and relevant entities.
+5. It searches historical incidents using database queries and similarity matching.
+6. It ranks and prioritizes the results based on relevance.
+7. It validates whether the output is grounded in actual incident history.
+8. It formats the final answer into a clean summary or structured result.
+
+Presenter 1 says: "This is where the app becomes agentic. It is not just searching for matching words; it is understanding intent, deciding relevant filters, looking for evidence, and then building a final response."
+
+#### Example 1: Clear query
+
+"Find similar incidents for payment API timeout and root cause details."
+
+What the system does:
+
+- detects incident-related intent
+- extracts keywords like payment, API, timeout
+- searches historical incidents for similar summary/description patterns
+- ranks likely matches
+- returns root cause and resolution from similar incidents
+
+#### Example 2: Noisy or imperfect query
+
+"payments broken again after deploy, something with db and vendor issue maybe timeout"
+
+What the system does:
+
+- normalizes noisy wording
+- strips irrelevant phrasing
+- identifies important tokens: payments, deploy, db, timeout, vendor
+- understands that the user likely wants similar incidents and root cause
+- performs search on the normalized terms
+- returns the best relevant incidents instead of failing on the rough wording
+
+This is important because real users do not always write perfect search queries. The system should be resilient to noisy text. That is part of the agentic behavior.
+
+Presenter 1 then explains: "The retrieval agent is designed to handle imperfect inputs and still reason over the intent. That is why the workflow is more intelligent than a typical keyword search."
+
+---
+
+### 5. Data validation and response validation
+
+Presenter 1: "After retrieval, we do not directly return raw search results. We validate the data and validate the response quality."
+
+Data validation steps:
+
+- check whether the incoming request has a valid query
+- ensure required fields exist
+- reject empty or malformed input
+- confirm the search context is meaningful
+
+Response validation steps:
+
+- confirm relevant results were actually found
+- ensure results are grounded in incident records
+- avoid returning fabricated or weakly supported answers
+- summarize only facts that match the query
+- return fallback values if no match is found
+
+Presenter 1 explains: "This is crucial because AI systems can sound confident even when they are wrong. In real deployment, we need evidence-first behavior. The system must check whether the result is relevant and trustworthy before sending it back to the user."
+
+This is one of the most important parts of the agentic design.
+
+---
+
+### 6. Retrieval API demonstration with 3-4 examples
+
+Presenter 1 now shows the actual example API calls and explains what they prove.
+
+#### Example A: Basic retrieval
+
+Request:
+
+```json
+{
+  "query": "payment API timeout after deployment"
+}
+```
+
+Endpoint:
+
+POST /retrieve
+
+What it proves:
+
+- the system can understand an incident-related user query
+- it searches earlier records for similar issues
+- it returns relevant incidents and evidence-backed context
+
+#### Example B: Search with noisy keyword input
+
+Request:
+
+```json
+{
+  "query": "payments down again maybe db issue vendor timeout deploy problem"
+}
+```
+
+What it proves:
+
+- the system handles imperfect user input
+- it extracts the important terms even when the wording is noisy
+- it still finds likely matches
+
+#### Example C: Root-cause-focused query
+
+Request:
+
+```json
+{
+  "query": "give me root cause for similar database connection issues in payments"
+}
+```
+
+What it proves:
+
+- the system can interpret user intent beyond simple keyword matching
+- it identifies RCA-style retrieval
+- it gives results centered around cause and resolution rather than just generic issue matching
+
+#### Example D: Critical issue retrieval
+
+Request:
+
+```json
+{
+  "query": "show me severe incidents related to vendor API failures"
+}
+```
+
+What it proves:
+
+- the system can handle severity and priority filtering
+- it can narrow results based on operational impact
+- it helps support managers and engineering leads
+
+Presenter 1 then explains: "These examples show why the system is agentic. It is not just returning one static retrieval. It is understanding the user’s goal, adapting to messy input, filtering evidence, and generating a response based on the stored historical incident knowledge."
+
+---
+
+### 7. Final summary script
+
+Presenter 1: "In summary, this project demonstrates an agentic AI workflow for incident operations. We ingest raw incident data, convert it into structured knowledge, store it for future use, and then retrieve relevant historical evidence when new problems arise. The model helps us handle diverse data formats, while the workflow logic decides what to do next based on intent, query quality, validation, and result relevance. This is exactly the kind of building block needed for real-world AI applications in enterprise systems."
+
+Presenter 1 closes: "What we have built is not just a demo search application. It is a reusable AI-powered incident intelligence layer that can scale into a production-grade operational assistant for engineering, support, and leadership teams."
+
+---
+
+### 8. Very short closing line
+
+"We are not just storing incidents; we are creating a system that learns from past failures and helps teams act smarter in the future."
+
+---
+
+### 9. Suggested direct read version
+
+If you want a direct read-aloud version, here is a shorter final script:
+
+"This project solves a real operational problem: production incidents are created every day, but most of that knowledge remains scattered and unusable. We built an incident intelligence platform that ingests raw incident data, normalizes it using AI, stores it in a structured database, and then retrieves similar historical incidents when a new issue appears. The ingestion layer handles variable and messy data formats using an LLM, converting them into clean operational records. The retrieval layer understands the user prompt, filters relevant incidents, validates the evidence, and returns a grounded response. This makes the system agentic because it is not just searching text—it is understanding intent, choosing the right workflow, validating the result, and making the output useful for decision-making. In short, we are turning incident history into reusable AI-powered operational knowledge."
